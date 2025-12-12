@@ -25,37 +25,34 @@ public class Main extends Application {
     private final SudokuGenerator generator = new SudokuGenerator();
 
     private final Object workerLock = new Object();
+    private final javafx.scene.control.Label speedLabel = new javafx.scene.control.Label();
+    private final javafx.scene.control.Label diffLabel = new javafx.scene.control.Label();
+    private final javafx.scene.control.Label messageLabel = new javafx.scene.control.Label();
+    // 保存当前题目的完整解，以及标记哪些是给定格
+    private final int[][] currentSolution = new int[9][9];
+    private final boolean[][] isGiven = new boolean[9][9];
+    private final int[][] initialPuzzle = new int[9][9];  // 用于保存程序启动时的初始状态（若无 random）
+    private final int[][] randomPuzzle = new int[9][9];   // 用于保存点击 random 时生成的题目
     private Thread workerThread;
     private volatile boolean running = false;
     private volatile boolean paused = false;
     private List<SudokuSolver.Step> currentSteps;
-
     // UI controls referenced across methods
     private Button pauseBtn;
     private int stepIndex;
-
     // dynamic params
     private volatile int solveSpeedMs = 80;      // milliseconds per step
     private int removeCount = 45;       // holes for generated puzzle
 
-    private final javafx.scene.control.Label speedLabel = new javafx.scene.control.Label();
-    private final javafx.scene.control.Label diffLabel = new javafx.scene.control.Label();
-    private final javafx.scene.control.Label messageLabel = new javafx.scene.control.Label();
-
-
-    // 保存当前题目的完整解，以及标记哪些是给定格
-    private final int[][] currentSolution = new int[9][9];
-    private final boolean[][] isGiven = new boolean[9][9];
-
-    private final int[][] initialPuzzle = new int[9][9];  // 用于保存程序启动时的初始状态（若无 random）
-    private final int[][] randomPuzzle = new int[9][9];   // 用于保存点击 random 时生成的题目
-
-//    private final int[][] currentPuzzleState = new int[9][9]; // 用来保存当前题目的状态
-
+    //    private final int[][] currentPuzzleState = new int[9][9]; // 用来保存当前题目的状态
     private boolean isPuzzleGenerated = false;
 
     // 在类中定义一个 Timeline 类型的实例变量
     private Timeline currentTimeline;
+
+    public static void main(String[] args) {
+        launch();
+    }
 
     @Override
     public void start(Stage stage) {
@@ -237,15 +234,17 @@ public class Main extends Application {
         return gridPane;
     }
 
-
-
     private String baseCellStyle(int r, int c) {
         StringBuilder sb = new StringBuilder();
         sb.append("-fx-font-size:20; -fx-alignment: center; -fx-border-color: #444;");
-        if (r % 3 == 0) sb.append("-fx-border-top-width:3;"); else sb.append("-fx-border-top-width:1;");
-        if (c % 3 == 0) sb.append("-fx-border-left-width:3;"); else sb.append("-fx-border-left-width:1;");
-        if (r == 8) sb.append("-fx-border-bottom-width:3;"); else sb.append("-fx-border-bottom-width:1;");
-        if (c == 8) sb.append("-fx-border-right-width:3;"); else sb.append("-fx-border-right-width:1;");
+        if (r % 3 == 0) sb.append("-fx-border-top-width:3;");
+        else sb.append("-fx-border-top-width:1;");
+        if (c % 3 == 0) sb.append("-fx-border-left-width:3;");
+        else sb.append("-fx-border-left-width:1;");
+        if (r == 8) sb.append("-fx-border-bottom-width:3;");
+        else sb.append("-fx-border-bottom-width:1;");
+        if (c == 8) sb.append("-fx-border-right-width:3;");
+        else sb.append("-fx-border-right-width:1;");
         return sb.toString();
     }
 
@@ -301,9 +300,6 @@ public class Main extends Application {
 
         return puzzle;  // 返回生成的数独题目
     }
-
-
-
 
     private void updateLabels() {
         speedLabel.setText("Speed: " + solveSpeedMs + " ms/step");
@@ -441,10 +437,6 @@ public class Main extends Application {
         if (pauseBtn != null) Platform.runLater(() -> pauseBtn.setText("Pause"));
     }
 
-    public static void main(String[] args) {
-        launch();
-    }
-
     private void setBoardEditable(boolean editable) {
         for (int r = 0; r < 9; r++) {
             for (int c = 0; c < 9; c++) {
@@ -463,13 +455,13 @@ public class Main extends Application {
     /**
      * 验证当前界面用户填写的答案（不依赖解，只按数独规则验证）。
      * 规则：
-     *  - 非空且非 1~9 → 标红
-     *  - 行重复 → 标红
-     *  - 列重复 → 标红
-     *  - 3×3 宫重复 → 标红
-     *  - 给定格保持淡紫色
-     *  - 正确但非给定格标绿色
-     *  - 空格为白色
+     * - 非空且非 1~9 → 标红
+     * - 行重复 → 标红
+     * - 列重复 → 标红
+     * - 3×3 宫重复 → 标红
+     * - 给定格保持淡紫色
+     * - 正确但非给定格标绿色
+     * - 空格为白色
      */
     private void validateBoard() {
         stopAnimation();
@@ -618,12 +610,8 @@ public class Main extends Application {
         }
 
         // 创建新的 Timeline，3秒后清空消息
-        currentTimeline = new Timeline(
-                new KeyFrame(
-                        Duration.seconds(3), // 设置3秒后清空
-                        e -> messageLabel.setText("")
-                )
-        );
+        currentTimeline = new Timeline(new KeyFrame(Duration.seconds(3), // 设置3秒后清空
+                e -> messageLabel.setText("")));
         currentTimeline.setCycleCount(1);
         currentTimeline.play();
     }
@@ -686,7 +674,6 @@ public class Main extends Application {
             }
         });
     }
-
 
 
 }
