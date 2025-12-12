@@ -1,4 +1,4 @@
-package com.sudo.ui;
+package com.sudo;
 
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;

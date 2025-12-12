@@ -1,4 +1,4 @@
-package com.sudo.ui;
+package com.sudo;
 
 public class SudokuSolver {
 
